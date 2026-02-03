@@ -82,6 +82,19 @@ def init_db():
             except Exception as e:
                 logger.warning(f"Migration warning: {e}")
                 logger.info("Continuing with table creation...")
+            
+            # Check and fix any unique constraints on category_id
+            try:
+                from database.fix_category_constraint import check_and_fix_category_constraint
+                import os
+                # Extract db path from DATABASE_URL
+                if "///" in DATABASE_URL:
+                    db_path = DATABASE_URL.split("///")[-1]
+                    if os.path.exists(db_path):
+                        check_and_fix_category_constraint(db_path)
+            except Exception as e:
+                logger.warning(f"Category constraint check warning: {e}")
+                logger.info("Continuing with table creation...")
         
         # Create all tables
         Base.metadata.create_all(bind=engine)

@@ -24,6 +24,8 @@ class Category(Base):
     updated_at = Column(DateTime, default=func.now(), onupdate=func.now(), nullable=False)
 
     # Relationship with toys
+    # Note: cascade="all, delete-orphan" means toys are deleted when category is deleted
+    # This does NOT prevent multiple toys per category
     toys = relationship("Toy", back_populates="category", cascade="all, delete-orphan")
 
     def __repr__(self):
@@ -43,6 +45,12 @@ class Category(Base):
 class Toy(Base):
     """
     Toy model representing a single toy item in the catalog
+    
+    IMPORTANT: 
+    - id is the ONLY primary key
+    - category_id is NOT unique (multiple toys can have the same category_id)
+    - One category can contain unlimited products
+    - Adding a new product always creates a new row, never overwrites existing products
     """
     __tablename__ = "toys"
 
@@ -52,6 +60,7 @@ class Toy(Base):
     description = Column(Text, nullable=False)
     media_type = Column(String(10), nullable=True)  # 'image' or 'video' (deprecated, kept for backward compatibility)
     media_file_id = Column(String(255), nullable=True)  # Telegram file_id (deprecated, kept for backward compatibility)
+    # category_id is NOT unique - multiple toys can belong to the same category
     category_id = Column(Integer, ForeignKey("categories.id"), nullable=True)
     is_active = Column(Boolean, default=True, nullable=False)
     created_at = Column(DateTime, default=func.now(), nullable=False)

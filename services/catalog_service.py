@@ -112,7 +112,27 @@ class CatalogService:
         media_file_id: str,
         category_id: Optional[int] = None
     ) -> Toy:
-        """Create a new toy"""
+        """
+        Create a new toy
+        
+        IMPORTANT: This always creates a NEW row.
+        It NEVER updates or deletes existing toys.
+        Multiple toys can have the same category_id.
+        
+        Args:
+            db: Database session
+            title: Toy title
+            price: Toy price
+            description: Toy description
+            media_type: Media type (deprecated, for backward compatibility)
+            media_file_id: Media file ID (deprecated, for backward compatibility)
+            category_id: Category ID (optional)
+            
+        Returns:
+            Newly created Toy object
+        """
+        # Always create a new toy instance
+        # This ensures we never overwrite existing products
         toy = Toy(
             title=title,
             price=price,
@@ -122,9 +142,12 @@ class CatalogService:
             category_id=category_id,
             is_active=True
         )
+        
+        # Add to session (this creates a new row)
         db.add(toy)
         db.commit()
         db.refresh(toy)
+        
         return toy
     
     @staticmethod
