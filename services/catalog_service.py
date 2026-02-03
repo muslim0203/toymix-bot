@@ -14,36 +14,58 @@ class CatalogService:
     """Service for catalog operations"""
     
     @staticmethod
-    def get_active_toys_by_category(db: Session, category_id: int, page: int = 1) -> Tuple[List[Toy], int]:
+    def get_active_toys_by_category(db: Session, category_id: int, page: int = 0, page_size: int = 10) -> Tuple[List[Toy], int]:
         """
         Get paginated list of active toys by category
         
         Args:
             db: Database session
             category_id: Category ID
-            page: Page number (1-indexed)
+            page: Page number (0-indexed)
+            page_size: Number of items per page (default: 10)
             
         Returns:
-            Tuple of (toys list, total pages)
+            Tuple of (toys list, total count)
         """
-        offset = (page - 1) * ITEMS_PER_PAGE
+        # Calculate offset
+        offset = page * page_size
         
         # Get total count
         total_count = db.query(Toy).filter(
             Toy.is_active == True,
             Toy.category_id == category_id
         ).count()
-        total_pages = (total_count + ITEMS_PER_PAGE - 1) // ITEMS_PER_PAGE if total_count > 0 else 1
         
-        # Get toys for current page
+        # Get paginated toys
+        toys = db.query(Toy).filter(
+            Toy.is_active == True,
+            Toy.category_id == category_id
+        ).order_by(
+            Toy.created_at.desc()  # Newest first
+        ).offset(offset).limit(page_size).all()  # Use offset and limit for pagination
+        
+        return toys, total_count
+    
+    @staticmethod
+    def get_all_active_toys_by_category(db: Session, category_id: int) -> List[Toy]:
+        """
+        Get ALL active toys by category (no pagination)
+        
+        Args:
+            db: Database session
+            category_id: Category ID
+            
+        Returns:
+            List of all active toys in the category
+        """
         toys = db.query(Toy).filter(
             Toy.is_active == True,
             Toy.category_id == category_id
         ).order_by(
             Toy.created_at.desc()
-        ).offset(offset).limit(ITEMS_PER_PAGE).all()
+        ).all()  # Always use .all() to get all products
         
-        return toys, total_pages
+        return toys
     
     @staticmethod
     def get_active_toys(db: Session, page: int = 1) -> Tuple[List[Toy], int]:
