@@ -116,12 +116,16 @@ async def show_category_toys(message: Message):
             return
         
         # Get paginated toys for this category (page 0, 10 items per page)
+        # IMPORTANT: This uses the service method which properly queries the database
         toys, total_count = CatalogService.get_active_toys_by_category(
             db, 
             category_id=category.id, 
             page=0,  # Start from page 0
             page_size=10
         )
+        
+        # Debug logging to verify products are found
+        logger.info(f"Category {category.id} ({category.name}): Found {total_count} total toys, showing {len(toys)} on page 1")
         
         if not toys:
             await message.answer(
@@ -199,12 +203,16 @@ async def handle_category_pagination(callback: CallbackQuery):
                 return
             
             # Get paginated toys for this category and page
+            # IMPORTANT: This uses the service method which properly queries the database
             toys, total_count = CatalogService.get_active_toys_by_category(
                 db,
                 category_id=category_id,
                 page=page,
                 page_size=10
             )
+            
+            # Debug logging
+            logger.info(f"Category {category_id} page {page}: Found {total_count} total toys, showing {len(toys)} on this page")
             
             if not toys:
                 await callback.answer("❌ O'yinchoqlar topilmadi", show_alert=True)

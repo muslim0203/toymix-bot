@@ -18,6 +18,9 @@ class CatalogService:
         """
         Get paginated list of active toys by category
         
+        IMPORTANT: Returns ALL active toys in category, properly paginated.
+        Uses .all() to ensure all products are returned.
+        
         Args:
             db: Database session
             category_id: Category ID
@@ -30,19 +33,19 @@ class CatalogService:
         # Calculate offset
         offset = page * page_size
         
-        # Get total count
-        total_count = db.query(Toy).filter(
-            Toy.is_active == True,
-            Toy.category_id == category_id
-        ).count()
+        # Build base query
+        base_query = db.query(Toy).filter(
+            Toy.category_id == category_id,
+            Toy.is_active == True
+        )
         
-        # Get paginated toys
-        toys = db.query(Toy).filter(
-            Toy.is_active == True,
-            Toy.category_id == category_id
-        ).order_by(
+        # Get total count (all active toys in category)
+        total_count = base_query.count()
+        
+        # Get paginated toys - ALWAYS use .all() to return list
+        toys = base_query.order_by(
             Toy.created_at.desc()  # Newest first
-        ).offset(offset).limit(page_size).all()  # Use offset and limit for pagination
+        ).offset(offset).limit(page_size).all()  # CRITICAL: .all() returns all products on page
         
         return toys, total_count
     
@@ -51,6 +54,9 @@ class CatalogService:
         """
         Get ALL active toys by category (no pagination)
         
+        IMPORTANT: Returns ALL active toys in category.
+        Uses .all() to ensure all products are returned.
+        
         Args:
             db: Database session
             category_id: Category ID
@@ -58,12 +64,13 @@ class CatalogService:
         Returns:
             List of all active toys in the category
         """
+        # Build query - ensure we get ALL active toys
         toys = db.query(Toy).filter(
-            Toy.is_active == True,
-            Toy.category_id == category_id
+            Toy.category_id == category_id,
+            Toy.is_active == True
         ).order_by(
             Toy.created_at.desc()
-        ).all()  # Always use .all() to get all products
+        ).all()  # CRITICAL: .all() returns all products, not just one
         
         return toys
     

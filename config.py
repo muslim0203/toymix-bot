@@ -100,6 +100,9 @@ GROUP_CHAT_ID: int = get_int_env("GROUP_CHAT_ID", -1003835595470)
 # SQLite (dev): sqlite:///toymix.db
 # PostgreSQL (prod): postgresql://user:pass@host:port/dbname
 # PostgreSQL async (prod): postgresql+asyncpg://user:pass@host:port/dbname
+#
+# PRODUCTION SAFETY: Single database engine ensures data consistency
+# All services use the same SessionLocal factory from database/db.py
 DATABASE_URL: str = get_optional_env("DATABASE_URL", "sqlite:///toymix.db")
 
 # ============================================================================

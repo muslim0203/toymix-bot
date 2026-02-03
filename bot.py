@@ -108,6 +108,28 @@ async def main():
             default=DefaultBotProperties(parse_mode=ParseMode.HTML)
         )
         dispatcher_instance = Dispatcher(storage=MemoryStorage())
+
+        # 🔴 🔴 🔴 TEST UCHUN SHU YERGA QO‘SHING 🔴 🔴 🔴
+        try:
+            await bot_instance.send_message(
+                chat_id=GROUP_CHAT_ID,
+                text="✅ TEST: bot guruhga xabar yubora oldi"
+            )
+            logger.info("Test message sent to group successfully.")
+        except Exception as e:
+            logger.error(f"Failed to send test message to group: {e}", exc_info=True)
+
+        # ⬇️ SHUNDAN KEYINgina qolgan kodlar
+        # handlers register
+        # scheduler start
+        # bestseller scheduler start
+
+        await dispatcher_instance.start_polling(bot_instance)
+
+    except Exception as e:
+        logger.critical(f"Fatal error in main(): {e}", exc_info=True)
+        sys.exit(1)
+
         
         # Register routers (admin first to handle admin-specific buttons)
         logger.info("Registering routers...")

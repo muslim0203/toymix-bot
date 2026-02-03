@@ -61,23 +61,36 @@ class CategoryBasedAdScheduler:
                 toy_media = MediaService.get_toy_media(db, toy.id)
                 
                 if toy_media and len(toy_media) > 0:
-                    # Send media group
-                    media_group = MediaService.get_media_for_media_group(toy_media)
+                    # Format advertisement message (will be caption on first media)
+                    message_text = AdsFormatter.format_ad_message(toy, category)
+                    keyboard = AdsFormatter.get_ad_keyboard(toy.id)
+                    
+                    # Send media group WITH caption on first media
+                    media_group = MediaService.get_media_for_media_group(
+                        toy_media,
+                        caption=message_text,
+                        parse_mode="HTML"
+                    )
                     sent_messages = await self.bot.send_media_group(
                         chat_id=GROUP_CHAT_ID,
                         media=media_group
                     )
                     
-                    # Format and send advertisement message
-                    message_text = AdsFormatter.format_ad_message(toy, category)
-                    keyboard = AdsFormatter.get_ad_keyboard(toy.id)
-                    
-                    await self.bot.send_message(
-                        chat_id=GROUP_CHAT_ID,
-                        text=message_text,
-                        parse_mode="HTML",
-                        reply_markup=keyboard
-                    )
+                    # Edit first message to add keyboard
+                    try:
+                        await self.bot.edit_message_reply_markup(
+                            chat_id=GROUP_CHAT_ID,
+                            message_id=sent_messages[0].message_id,
+                            reply_markup=keyboard
+                        )
+                    except Exception as e:
+                        # If editing fails, send keyboard as separate message
+                        logger.warning(f"Could not edit media group message: {e}")
+                        await self.bot.send_message(
+                            chat_id=GROUP_CHAT_ID,
+                            text="🔘",
+                            reply_markup=keyboard
+                        )
                 else:
                     # Fallback to single media (backward compatibility)
                     message_text = AdsFormatter.format_ad_message(toy, category)
@@ -260,24 +273,37 @@ class CategoryBasedAdScheduler:
                 toy_media = MediaService.get_toy_media(db, toy.id)
                 
                 if toy_media and len(toy_media) > 0:
-                    # Send media group
-                    media_group = MediaService.get_media_for_media_group(toy_media)
+                    # Format advertisement message (will be caption on first media)
+                    category_obj = category if category else None
+                    message_text = AdsFormatter.format_ad_message(toy, category_obj)
+                    keyboard = AdsFormatter.get_ad_keyboard(toy.id)
+                    
+                    # Send media group WITH caption on first media
+                    media_group = MediaService.get_media_for_media_group(
+                        toy_media,
+                        caption=message_text,
+                        parse_mode="HTML"
+                    )
                     sent_messages = await self.bot.send_media_group(
                         chat_id=GROUP_CHAT_ID,
                         media=media_group
                     )
                     
-                    # Format and send advertisement message
-                    category_obj = category if category else None
-                    message_text = AdsFormatter.format_ad_message(toy, category_obj)
-                    keyboard = AdsFormatter.get_ad_keyboard(toy.id)
-                    
-                    await self.bot.send_message(
-                        chat_id=GROUP_CHAT_ID,
-                        text=message_text,
-                        parse_mode="HTML",
-                        reply_markup=keyboard
-                    )
+                    # Edit first message to add keyboard
+                    try:
+                        await self.bot.edit_message_reply_markup(
+                            chat_id=GROUP_CHAT_ID,
+                            message_id=sent_messages[0].message_id,
+                            reply_markup=keyboard
+                        )
+                    except Exception as e:
+                        # If editing fails, send keyboard as separate message
+                        logger.warning(f"Could not edit media group message: {e}")
+                        await self.bot.send_message(
+                            chat_id=GROUP_CHAT_ID,
+                            text="🔘",
+                            reply_markup=keyboard
+                        )
                 else:
                     # Fallback to single media
                     category_obj = category if category else None
