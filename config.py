@@ -69,7 +69,7 @@ BOT_USERNAME: str = get_optional_env("BOT_USERNAME", "@YaypanToymixBot")
 GROUP_LINK: str = get_optional_env("GROUP_LINK", "https://t.me/yaypantoymix")
 
 # Order phone number
-ORDER_PHONE: str = get_optional_env("ORDER_PHONE", "+998901234567")
+ORDER_PHONE: str = get_optional_env("ORDER_PHONE", "+998902699198")
 
 # Number of ads per day
 DAILY_AD_COUNT: int = get_int_env("DAILY_AD_COUNT", 15)

@@ -57,10 +57,12 @@ class AdsFormatter:
         """
         builder = InlineKeyboardBuilder()
         
-        # Row 1: Buyurtma bering
+        # Row 1: Buyurtma bering - opens bot private chat
+        # Format bot username for URL (remove @ if present)
+        bot_username_clean = BOT_USERNAME.replace('@', '')
         builder.add(InlineKeyboardButton(
             text="🛒 Buyurtma bering",
-            callback_data=f"order_from_ad_{toy_id}"
+            url=f"https://t.me/{bot_username_clean}?start=order_{toy_id}"
         ))
         
         # Row 2: Guruhga qo'shilish and Katalogni ko'rish

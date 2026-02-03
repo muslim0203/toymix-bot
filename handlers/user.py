@@ -34,6 +34,59 @@ class OrderStates(StatesGroup):
 @router.message(CommandStart())
 async def cmd_start(message: Message):
     """Handle /start command"""
+    # Check if start command has parameters (e.g., /start order_123)
+    command_args = message.text.split(' ', 1)
+    
+    if len(command_args) > 1:
+        # Handle start with parameters (e.g., from ad button)
+        param = command_args[1]
+        
+        if param.startswith("order_"):
+            # Extract toy_id from parameter
+            try:
+                toy_id = int(param.split("_")[1])
+                
+                # Get contacts from database
+                db = get_db_session()
+                try:
+                    contacts = OrderContactService.get_active_contacts(db)
+                    contact_text = OrderContactService.format_contacts_for_display(contacts)
+                    
+                    # Get toy info for logging
+                    toy = CatalogService.get_toy_by_id(db, toy_id)
+                    if toy:
+                        category_id = toy.category_id if toy.category else None
+                        category_name = toy.category.name if toy.category else None
+                        
+                        # Log sale lead
+                        StatsService.log_sale_lead(
+                            db=db,
+                            user_id=message.from_user.id,
+                            toy_id=toy_id,
+                            toy_name=toy.title,
+                            category_id=category_id,
+                            category_name=category_name
+                        )
+                finally:
+                    db.close()
+                
+                order_text = (
+                    f"🛒 <b>Buyurtma berish</b>\n\n"
+                    f"{contact_text}\n\n"
+                    f"Buyurtma berish uchun quyidagi kontaktlar bilan bog'laning."
+                )
+                
+                await message.answer(
+                    order_text,
+                    parse_mode="HTML",
+                    reply_markup=get_main_menu_keyboard()
+                )
+                return
+            except (ValueError, IndexError) as e:
+                logger.error(f"Error parsing start parameter: {e}", exc_info=True)
+                # Continue to normal start flow
+    
+    # Normal start command
     welcome_text = (
         "👋 Assalomu alaykum!\n\n"
         "Yaypan Toymix botiga xush kelibsiz! 🎁\n\n"
