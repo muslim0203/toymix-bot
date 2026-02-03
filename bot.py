@@ -12,7 +12,7 @@ from aiogram.client.default import DefaultBotProperties
 from aiogram.fsm.storage.memory import MemoryStorage
 from aiogram.exceptions import TelegramNetworkError, TelegramAPIError
 
-from config import BOT_TOKEN, LOG_LEVEL
+from config import BOT_TOKEN, LOG_LEVEL, GROUP_CHAT_ID
 from database.db import init_db
 from handlers import (
     user, admin, admin_category_manage, admin_contacts, admin_stats,
