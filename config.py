@@ -93,8 +93,22 @@ ADMIN_IDS: List[int] = get_list_env("ADMIN_IDS", [
 ])
 
 # Group chat ID where ads will be posted
+# CRITICAL: Must be set in environment variable for production
+# Format: -1001234567890 (negative integer for groups/supergroups)
 # Set to "0" to disable group ads
-GROUP_CHAT_ID: int = get_int_env("GROUP_CHAT_ID", -1003835595470)
+GROUP_CHAT_ID_RAW = os.getenv("GROUP_CHAT_ID")
+if GROUP_CHAT_ID_RAW:
+    try:
+        GROUP_CHAT_ID: int = int(GROUP_CHAT_ID_RAW)
+        if GROUP_CHAT_ID > 0:
+            logger.warning(f"⚠️  GROUP_CHAT_ID is positive ({GROUP_CHAT_ID}). Groups usually have negative IDs (e.g., -1001234567890)")
+    except ValueError:
+        logger.error(f"❌ GROUP_CHAT_ID must be an integer, got: {GROUP_CHAT_ID_RAW}")
+        GROUP_CHAT_ID: int = 0
+else:
+    # Default fallback (development only)
+    GROUP_CHAT_ID: int = -1003835595470
+    logger.warning("⚠️  GROUP_CHAT_ID not set in environment, using default. Set GROUP_CHAT_ID env var for production.")
 
 # Database URL
 # SQLite (dev): sqlite:///toymix.db

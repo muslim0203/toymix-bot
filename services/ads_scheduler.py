@@ -36,11 +36,20 @@ class CategoryBasedAdScheduler:
         """
         Post a random toy advertisement from a random category
         This function is called by the scheduler
+        
+        CRITICAL: ALL messages MUST be sent to GROUP_CHAT_ID, never to private chat.
         """
         try:
+            # CRITICAL: Validate GROUP_CHAT_ID before sending
             if GROUP_CHAT_ID == 0:
-                logger.warning("GROUP_CHAT_ID not configured, skipping ad post")
+                logger.warning("GROUP_CHAT_ID not configured (set to 0), skipping ad post")
                 return
+            
+            if GROUP_CHAT_ID > 0:
+                logger.error(f"❌ GROUP_CHAT_ID is positive ({GROUP_CHAT_ID}). Groups must have negative IDs. Skipping ad post.")
+                return
+            
+            logger.info(f"📤 Posting ad to group chat ID: {GROUP_CHAT_ID}")
             
             db = get_db_session()
             try:
@@ -71,15 +80,18 @@ class CategoryBasedAdScheduler:
                         caption=message_text,
                         parse_mode="HTML"
                     )
+                    # CRITICAL: Must use GROUP_CHAT_ID, never message.chat.id or user_id
+                    logger.debug(f"Sending media group to chat_id={GROUP_CHAT_ID}")
                     sent_messages = await self.bot.send_media_group(
-                        chat_id=GROUP_CHAT_ID,
+                        chat_id=GROUP_CHAT_ID,  # MUST be GROUP_CHAT_ID constant
                         media=media_group
                     )
+                    logger.info(f"✅ Media group sent successfully to group {GROUP_CHAT_ID}")
                     
                     # Edit first message to add keyboard
                     try:
                         await self.bot.edit_message_reply_markup(
-                            chat_id=GROUP_CHAT_ID,
+                            chat_id=GROUP_CHAT_ID,  # MUST be GROUP_CHAT_ID constant
                             message_id=sent_messages[0].message_id,
                             reply_markup=keyboard
                         )
@@ -87,7 +99,7 @@ class CategoryBasedAdScheduler:
                         # If editing fails, send keyboard as separate message
                         logger.warning(f"Could not edit media group message: {e}")
                         await self.bot.send_message(
-                            chat_id=GROUP_CHAT_ID,
+                            chat_id=GROUP_CHAT_ID,  # MUST be GROUP_CHAT_ID constant
                             text="🔘",
                             reply_markup=keyboard
                         )
@@ -97,35 +109,44 @@ class CategoryBasedAdScheduler:
                     keyboard = AdsFormatter.get_ad_keyboard(toy.id)
                     
                     if toy.media_type == "image" and toy.media_file_id:
+                        # CRITICAL: Must use GROUP_CHAT_ID, never message.chat.id
+                        logger.debug(f"Sending photo to chat_id={GROUP_CHAT_ID}")
                         await self.bot.send_photo(
-                            chat_id=GROUP_CHAT_ID,
+                            chat_id=GROUP_CHAT_ID,  # MUST be GROUP_CHAT_ID constant
                             photo=toy.media_file_id,
                             caption=message_text,
                             parse_mode="HTML",
                             reply_markup=keyboard
                         )
+                        logger.info(f"✅ Photo sent successfully to group {GROUP_CHAT_ID}")
                     elif toy.media_type == "video" and toy.media_file_id:
+                        # CRITICAL: Must use GROUP_CHAT_ID, never message.chat.id
+                        logger.debug(f"Sending video to chat_id={GROUP_CHAT_ID}")
                         await self.bot.send_video(
-                            chat_id=GROUP_CHAT_ID,
+                            chat_id=GROUP_CHAT_ID,  # MUST be GROUP_CHAT_ID constant
                             video=toy.media_file_id,
                             caption=message_text,
                             parse_mode="HTML",
                             reply_markup=keyboard
                         )
+                        logger.info(f"✅ Video sent successfully to group {GROUP_CHAT_ID}")
                     else:
                         # No media, send text only
+                        # CRITICAL: Must use GROUP_CHAT_ID, never message.chat.id
+                        logger.debug(f"Sending text message to chat_id={GROUP_CHAT_ID}")
                         await self.bot.send_message(
-                            chat_id=GROUP_CHAT_ID,
+                            chat_id=GROUP_CHAT_ID,  # MUST be GROUP_CHAT_ID constant
                             text=message_text,
                             parse_mode="HTML",
                             reply_markup=keyboard
                         )
+                        logger.info(f"✅ Text message sent successfully to group {GROUP_CHAT_ID}")
                 
                 # Log the ad
                 AdsSelector.log_ad_posted(db, toy.id, category.id if category else None)
                 
                 category_name = category.name if category else "Kategoriyasiz"
-                logger.info(f"Posted ad for toy ID {toy.id} ({toy.title}) from category {category_name}")
+                logger.info(f"Posted ad for toy ID {toy.id} ({toy.title}) from category {category_name} to group {GROUP_CHAT_ID}")
                 
             except Exception as e:
                 logger.error(f"Error posting ad: {e}", exc_info=True)
@@ -241,6 +262,8 @@ class CategoryBasedAdScheduler:
         """
         Manually post an advertisement (admin triggered)
         
+        CRITICAL: ALL messages MUST be sent to GROUP_CHAT_ID, never to private chat.
+        
         Args:
             toy_id: Optional specific toy ID, or None for random
             
@@ -248,9 +271,16 @@ class CategoryBasedAdScheduler:
             True if successful, False otherwise
         """
         try:
+            # CRITICAL: Validate GROUP_CHAT_ID before sending
             if GROUP_CHAT_ID == 0:
-                logger.warning("GROUP_CHAT_ID not configured")
+                logger.warning("GROUP_CHAT_ID not configured (set to 0), cannot post manual ad")
                 return False
+            
+            if GROUP_CHAT_ID > 0:
+                logger.error(f"❌ GROUP_CHAT_ID is positive ({GROUP_CHAT_ID}). Groups must have negative IDs. Cannot post ad.")
+                return False
+            
+            logger.info(f"📤 Posting manual ad to group chat ID: {GROUP_CHAT_ID}")
             
             db = get_db_session()
             try:
@@ -284,15 +314,18 @@ class CategoryBasedAdScheduler:
                         caption=message_text,
                         parse_mode="HTML"
                     )
+                    # CRITICAL: Must use GROUP_CHAT_ID, never message.chat.id or user_id
+                    logger.debug(f"Sending manual ad media group to chat_id={GROUP_CHAT_ID}")
                     sent_messages = await self.bot.send_media_group(
-                        chat_id=GROUP_CHAT_ID,
+                        chat_id=GROUP_CHAT_ID,  # MUST be GROUP_CHAT_ID constant
                         media=media_group
                     )
+                    logger.info(f"✅ Manual ad media group sent successfully to group {GROUP_CHAT_ID}")
                     
                     # Edit first message to add keyboard
                     try:
                         await self.bot.edit_message_reply_markup(
-                            chat_id=GROUP_CHAT_ID,
+                            chat_id=GROUP_CHAT_ID,  # MUST be GROUP_CHAT_ID constant
                             message_id=sent_messages[0].message_id,
                             reply_markup=keyboard
                         )
@@ -300,7 +333,7 @@ class CategoryBasedAdScheduler:
                         # If editing fails, send keyboard as separate message
                         logger.warning(f"Could not edit media group message: {e}")
                         await self.bot.send_message(
-                            chat_id=GROUP_CHAT_ID,
+                            chat_id=GROUP_CHAT_ID,  # MUST be GROUP_CHAT_ID constant
                             text="🔘",
                             reply_markup=keyboard
                         )
@@ -311,35 +344,44 @@ class CategoryBasedAdScheduler:
                     keyboard = AdsFormatter.get_ad_keyboard(toy.id)
                     
                     if toy.media_type == "image" and toy.media_file_id:
+                        # CRITICAL: Must use GROUP_CHAT_ID, never message.chat.id
+                        logger.debug(f"Sending manual ad photo to chat_id={GROUP_CHAT_ID}")
                         await self.bot.send_photo(
-                            chat_id=GROUP_CHAT_ID,
+                            chat_id=GROUP_CHAT_ID,  # MUST be GROUP_CHAT_ID constant
                             photo=toy.media_file_id,
                             caption=message_text,
                             parse_mode="HTML",
                             reply_markup=keyboard
                         )
+                        logger.info(f"✅ Manual ad photo sent successfully to group {GROUP_CHAT_ID}")
                     elif toy.media_type == "video" and toy.media_file_id:
+                        # CRITICAL: Must use GROUP_CHAT_ID, never message.chat.id
+                        logger.debug(f"Sending manual ad video to chat_id={GROUP_CHAT_ID}")
                         await self.bot.send_video(
-                            chat_id=GROUP_CHAT_ID,
+                            chat_id=GROUP_CHAT_ID,  # MUST be GROUP_CHAT_ID constant
                             video=toy.media_file_id,
                             caption=message_text,
                             parse_mode="HTML",
                             reply_markup=keyboard
                         )
+                        logger.info(f"✅ Manual ad video sent successfully to group {GROUP_CHAT_ID}")
                     else:
                         # No media, send text only
+                        # CRITICAL: Must use GROUP_CHAT_ID, never message.chat.id
+                        logger.debug(f"Sending manual ad text to chat_id={GROUP_CHAT_ID}")
                         await self.bot.send_message(
-                            chat_id=GROUP_CHAT_ID,
+                            chat_id=GROUP_CHAT_ID,  # MUST be GROUP_CHAT_ID constant
                             text=message_text,
                             parse_mode="HTML",
                             reply_markup=keyboard
                         )
+                        logger.info(f"✅ Manual ad text sent successfully to group {GROUP_CHAT_ID}")
                 
                 # Log if not manual specific toy
                 if not toy_id:
                     AdsSelector.log_ad_posted(db, toy.id, toy.category_id if toy.category else None)
                 
-                logger.info(f"Manually posted ad for toy ID {toy.id} ({toy.title})")
+                logger.info(f"Manually posted ad for toy ID {toy.id} ({toy.title}) to group {GROUP_CHAT_ID}")
                 return True
                 
             except Exception as e:

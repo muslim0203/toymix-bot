@@ -109,13 +109,19 @@ async def main():
         )
         dispatcher_instance = Dispatcher(storage=MemoryStorage())
 
-        # 🔴 🔴 🔴 TEST UCHUN SHU YERGA QO‘SHING 🔴 🔴 🔴
+        # 🔴 🔴 🔴 TEST UCHUN SHU YERGA QO'SHING 🔴 🔴 🔴
+        # CRITICAL: Test message MUST go to GROUP_CHAT_ID, not private chat
         try:
-            await bot_instance.send_message(
-                chat_id=GROUP_CHAT_ID,
-                text="✅ TEST: bot guruhga xabar yubora oldi"
-            )
-            logger.info("Test message sent to group successfully.")
+            if GROUP_CHAT_ID == 0:
+                logger.warning("⚠️  GROUP_CHAT_ID is 0, skipping test message")
+            elif GROUP_CHAT_ID > 0:
+                logger.error(f"❌ GROUP_CHAT_ID is positive ({GROUP_CHAT_ID}). Groups must have negative IDs.")
+            else:
+                await bot_instance.send_message(
+                    chat_id=GROUP_CHAT_ID,  # CRITICAL: Must be GROUP_CHAT_ID, never message.chat.id
+                    text="✅ TEST: bot guruhga xabar yubora oldi"
+                )
+                logger.info(f"✅ Test message sent to group {GROUP_CHAT_ID} successfully.")
         except Exception as e:
             logger.error(f"Failed to send test message to group: {e}", exc_info=True)
 
