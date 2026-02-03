@@ -164,10 +164,7 @@ async def main():
         
         # Start polling
         logger.info("Starting long polling...")
-        await dispatcher_instance.start_polling(
-            bot_instance,
-            allowed_updates=dispatcher_instance.resolve_used_update_types()
-        )
+        await dispatcher_instance.start_polling(bot_instance)
         
     except KeyboardInterrupt:
         logger.info("Bot interrupted by user")
