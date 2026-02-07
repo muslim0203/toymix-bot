@@ -71,16 +71,21 @@ GROUP_LINK: str = get_optional_env("GROUP_LINK", "https://t.me/yaypantoymix")
 # Order phone number
 ORDER_PHONE: str = get_optional_env("ORDER_PHONE", "+998902699198")
 
-# Number of ads per day
-DAILY_AD_COUNT: int = get_int_env("DAILY_AD_COUNT", 15)
+# Number of ads per day (random between min and max)
+DAILY_AD_COUNT_MIN: int = get_int_env("DAILY_AD_COUNT_MIN", 10)
+DAILY_AD_COUNT_MAX: int = get_int_env("DAILY_AD_COUNT_MAX", 15)
 
-# Ad posting time window
+# Ad posting time window (Tashkent time GMT+5)
 AD_START_HOUR: int = get_int_env("AD_START_HOUR", 9)
 AD_END_HOUR: int = get_int_env("AD_END_HOUR", 21)
 
+# Timezone for scheduling (GMT+5 Tashkent)
+AD_TIMEZONE: str = get_optional_env("AD_TIMEZONE", "Asia/Tashkent")
+
 # Interval between ads (minutes)
-AD_MIN_INTERVAL: int = get_int_env("AD_MIN_INTERVAL", 30)
-AD_MAX_INTERVAL: int = get_int_env("AD_MAX_INTERVAL", 90)
+# For 10-15 ads in 12 hours (9:00-21:00): avg ~48-72 min intervals needed
+AD_MIN_INTERVAL: int = get_int_env("AD_MIN_INTERVAL", 40)
+AD_MAX_INTERVAL: int = get_int_env("AD_MAX_INTERVAL", 70)
 
 # Pagination
 ITEMS_PER_PAGE: int = get_int_env("ITEMS_PER_PAGE", 5)

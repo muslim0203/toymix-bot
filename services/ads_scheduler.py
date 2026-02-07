@@ -11,9 +11,10 @@ from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
 from config import (
-    DAILY_AD_COUNT, AD_START_HOUR, AD_END_HOUR, GROUP_CHAT_ID,
-    AD_MIN_INTERVAL, AD_MAX_INTERVAL
+    DAILY_AD_COUNT_MIN, DAILY_AD_COUNT_MAX, AD_START_HOUR, AD_END_HOUR, 
+    GROUP_CHAT_ID, AD_MIN_INTERVAL, AD_MAX_INTERVAL, AD_TIMEZONE
 )
+from pytz import timezone
 from services.ads_selector import AdsSelector
 from services.ads_formatter import AdsFormatter
 from services.media_service import MediaService
@@ -28,7 +29,9 @@ class CategoryBasedAdScheduler:
     
     def __init__(self, bot: Bot):
         self.bot = bot
-        self.scheduler = AsyncIOScheduler()
+        # Use Tashkent timezone (GMT+5) for scheduling
+        self.tz = timezone(AD_TIMEZONE)
+        self.scheduler = AsyncIOScheduler(timezone=self.tz)
         self.is_running = False
     
     
@@ -194,8 +197,12 @@ class CategoryBasedAdScheduler:
             logger.warning("Scheduler is already running")
             return
         
+        # Random ad count between min and max (10-15)
+        daily_count = random.randint(DAILY_AD_COUNT_MIN, DAILY_AD_COUNT_MAX)
+        logger.info(f"📊 Today's ad count: {daily_count} (range: {DAILY_AD_COUNT_MIN}-{DAILY_AD_COUNT_MAX})")
+        
         # Generate random posting times
-        posting_times = self._generate_random_times(DAILY_AD_COUNT)
+        posting_times = self._generate_random_times(daily_count)
         
         if not posting_times:
             logger.warning("No valid posting times generated")
@@ -222,7 +229,7 @@ class CategoryBasedAdScheduler:
         
         self.scheduler.start()
         self.is_running = True
-        logger.info("✅ Category-based ad scheduler started")
+        logger.info(f"✅ Category-based ad scheduler started (Timezone: {AD_TIMEZONE}, Hours: {AD_START_HOUR}:00-{AD_END_HOUR}:00)")
     
     def _reschedule_daily_ads(self):
         """Reschedule ads with new random times for the next day"""
@@ -231,8 +238,12 @@ class CategoryBasedAdScheduler:
             if job.id.startswith("cat_ad_post_"):
                 self.scheduler.remove_job(job.id)
         
+        # Random ad count between min and max (10-15)
+        daily_count = random.randint(DAILY_AD_COUNT_MIN, DAILY_AD_COUNT_MAX)
+        logger.info(f"📊 Tomorrow's ad count: {daily_count} (range: {DAILY_AD_COUNT_MIN}-{DAILY_AD_COUNT_MAX})")
+        
         # Generate new random times
-        posting_times = self._generate_random_times(DAILY_AD_COUNT)
+        posting_times = self._generate_random_times(daily_count)
         
         if not posting_times:
             logger.warning("No valid posting times generated for reschedule")
